@@ -77,7 +77,7 @@ namespace ucubot.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateSignal(SlackMessage message)
         {
-            var userId = message.user_id.Replace(';','x');
+            var userId = message.user_id;
             int signalType;
             try
             {
@@ -89,7 +89,10 @@ namespace ucubot.Controllers
             }
             
             var connection = new MySqlConnection(_configuration.GetConnectionString("BotDatabase"));
-            var command = new MySqlCommand($"insert into lesson_signal (UserId, SignalType) values ({userId}, {signalType});",connection);
+            var command = new MySqlCommand($"insert into lesson_signal (UserId, SignalType) values (@user_id, @signalType);",connection);
+            command.Parameters.Add(new MySqlParameter(){ParameterName = "@user_id",Value = userId});
+            command.Parameters.Add(new MySqlParameter(){ParameterName = "@signalType",Value = signalType});
+            
             connection.Open();
             await command.ExecuteNonQueryAsync();
             connection.Close();
