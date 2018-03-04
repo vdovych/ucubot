@@ -77,8 +77,17 @@ namespace ucubot.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateSignal(SlackMessage message)
         {
-            var userId = message.user_id;
-            var signalType = (int)message.text.ConvertSlackMessageToSignalType();
+            var userId = message.user_id.Replace(';','x');
+            int signalType;
+            try
+            {
+               signalType = (int) message.text.ConvertSlackMessageToSignalType();
+            }
+            catch (CanNotParseSlackCommandException e)
+            {
+                return BadRequest();
+            }
+            
             var connection = new MySqlConnection(_configuration.GetConnectionString("BotDatabase"));
             var command = new MySqlCommand($"insert into lesson_signal (UserId, SignalType) values ({userId}, {signalType});",connection);
             connection.Open();
